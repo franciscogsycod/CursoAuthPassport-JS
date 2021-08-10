@@ -1,2 +1,2 @@
-./jwt-utilities/node_modules
-./handle-session/node_modules
+/jwt-utilities/node_modules/
+/handle-session/node_modules/
