@@ -1,17 +1,26 @@
 const express = require('express');
-const { UserMoviesService } = require('../services/userMovies.js');
+const UserMoviesService = require('../services/userMovies.js');
 const validationHandler = require('../utils/middleware/validationHandler');
+const scopesValidationHandler = require('../utils/middleware/scopesValidationHandler');
+const passport = require('passport');
 const { movieIDSchema } = require('../utils/schemas/movies');
 const { userIDSchema } = require('../utils/schemas/users');
 const { createUserMovieSchema } = require('../utils/schemas/userMovies');
 
+// JWT Strategy
+require('../utils/auth/strategies/jwt');
+
 function userMoviesAPI(app) {
     const router = express.Router();
-    app.user('api/user-movies', router);
+    app.use('api/user-movies', router);
 
-    const userMoviesService = new UserMoviesService;
+    const userMoviesService = new UserMoviesService();
 
-    router.get('/', validationHandler({
+    router.get(
+        '/', 
+        passport.authenticate('jwt', {session: false}),
+        scopesValidationHandler(['read:user-movies']),
+        validationHandler({
         userID: userIDSchema,
     }, 'query'),
     async function (request, response, next) {
@@ -27,7 +36,11 @@ function userMoviesAPI(app) {
         }
     })
 
-    router.post('/', validationHandler(createUserMovieSchema), 
+    router.post(
+        '/', 
+        passport.authenticate('jwt', {session: false}),
+        scopesValidationHandler(['create:user-movies']),
+        validationHandler(createUserMovieSchema), 
     async function (request, response, next) {
         const { body: userMovie } = request;
         try {
@@ -43,7 +56,11 @@ function userMoviesAPI(app) {
         }
     })
 
-    router.delete('/:userMovieID', validationHandler({ 
+    router.delete(
+        '/:userMovieID', 
+        passport.authenticate('jwt', {session: false}),
+        scopesValidationHandler(['delete:user-movies']),
+        validationHandler({ 
         userMovieID: movieIDSchema
     }, 'params',
     async function (request, response, next) {
